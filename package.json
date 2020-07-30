@@ -1,0 +1,36 @@
+{
+  "name": "virtual-list",
+  "version": "0.0.0",
+  "description": "Virtual list core",
+  "main": "dist/virtual-list.umd.js",
+  "module": "dist/virtual-list.es.js",
+  "types": "dist/types",
+  "scripts": {
+    "build": "rollup -c && tsc -d --emitDeclarationOnly --declarationDir dist/types",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ChuChencheng/virtual-list.git"
+  },
+  "keywords": [
+    "Virtual",
+    "List"
+  ],
+  "author": "ChuChencheng",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ChuChencheng/virtual-list/issues"
+  },
+  "homepage": "https://github.com/ChuChencheng/virtual-list#readme",
+  "devDependencies": {
+    "@babel/core": "^7.10.5",
+    "@babel/preset-env": "^7.10.4",
+    "@rollup/plugin-babel": "^5.1.0",
+    "@rollup/plugin-node-resolve": "^8.4.0",
+    "@rollup/plugin-typescript": "^5.0.2",
+    "rollup": "^2.23.0",
+    "tslib": "^2.0.0",
+    "typescript": "^3.9.7"
+  }
+}
