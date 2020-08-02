@@ -1,0 +1,17 @@
+{
+  "root": true,
+  "parser": "@typescript-eslint/parser",
+  "plugins": [
+    "@typescript-eslint"
+  ],
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended"
+  ],
+  "rules": {
+    "comma-dangle": ["warn", "always-multiline"],
+    "quotes": ["warn", "single"],
+    "indent": ["warn", 2],
+    "@typescript-eslint/indent": ["warn", 2]
+  }
+}
