@@ -13,7 +13,8 @@ export default function <Data> ({
 }: IFixedSizeParameters<Data>): IVirtualListBaseReturnValue<Data> {
   const dataLength = data.length
   const totalSize = dataLength * itemSize
-  const visibleAmount = Math.ceil(visibleSize / itemSize) + bufferAmount
+  // Expand visible size with 1 buffer item at the top, 1 at the bottom.
+  const visibleAmount = Math.ceil((visibleSize + 2 * itemSize) / itemSize) + bufferAmount
   if (dataLength <= visibleAmount) {
     return {
       visibleData: data,
