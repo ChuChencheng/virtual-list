@@ -1,5 +1,4 @@
-# virtual-list
-Virtual list core
+<div style="text-align:center;font-size:32px;">Virtual list core</div>
 
 # Installation
 
@@ -11,5 +10,5 @@ Virtual list core
 
 # Todos
 
-- [] Documentation
-- [] Unit test
+- [ ] Documentation
+- [ ] Unit test
