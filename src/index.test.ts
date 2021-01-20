@@ -1,11 +1,12 @@
 import virtualList from './index'
 
-const sharedData = Array.from({ length: 1000 }).fill(0)
+const getData = (length: number) => Array.from({ length }).fill(0)
 
 describe('Fixed height', () => {
   it('normal parameters', () => {
+    const dataLength = 1000
     const result = virtualList({
-      data: sharedData,
+      data: getData(dataLength),
       scrolledDistance: 1600,
       visibleSize: 320,
       bufferAmount: 20,
@@ -13,10 +14,55 @@ describe('Fixed height', () => {
     })
 
     expect(result.startIndex).toBe(30)
-    expect(result.endIndex).toBe(60)
+    expect(result.endIndex).toBe(59)
     expect(result.halfBufferAmount).toBe(10)
-    expect(result.visibleData.length).toBe(30)
-    expect(result.totalSize).toBe(sharedData.length * 50)
+    expect(result.visibleData.length).toBe(29)
+    expect(result.totalSize).toBe(dataLength * 50)
     expect(result.offset).toBe(1500)
   })
+
+  it('no data', () => {
+    const result = virtualList({
+      data: [],
+      scrolledDistance: 1600,
+      visibleSize: 320,
+      bufferAmount: 20,
+      itemSize: 50,
+    })
+
+    expect(result.startIndex).toBe(0)
+    expect(result.endIndex).toBe(0)
+    expect(result.halfBufferAmount).toBe(10)
+    expect(result.visibleData.length).toBe(0)
+    expect(result.totalSize).toBe(0)
+    expect(result.offset).toBe(0)
+  })
+
+  it('no virtual list', () => {
+    const dataLength = 29
+    const result = virtualList({
+      data: getData(dataLength),
+      scrolledDistance: 1600,
+      visibleSize: 320,
+      bufferAmount: 20,
+      itemSize: 50,
+    })
+
+    expect(result.startIndex).toBe(0)
+    expect(result.endIndex).toBe(29)
+    expect(result.halfBufferAmount).toBe(10)
+    expect(result.visibleData.length).toBe(29)
+    expect(result.totalSize).toBe(1450)
+    expect(result.offset).toBe(0)
+  })
+
+  it('wrong scroll distance', () => {})
+
+  it('small visible size', () => {})
+
+  it('large buffer amount', () => {})
+
+  it('small buffer amount', () => {})
+
+  it('small item size', () => {})
 })
