@@ -30,20 +30,20 @@ function fixedSizeVirtualList<Data>({
   visibleSize,
   bufferAmount = 20,
 }: IFixedSizeParameters<Data>): IVirtualListReturnValue<Data> {
+  const halfBufferAmount = bufferAmount < 1 ? 1 : Math.ceil(bufferAmount / 2)
+  const totalAmount = data.length
+  const totalSize = totalAmount * itemSize
   let startIndex = 0
-  let endIndex = data.length
-  let halfBufferAmount = 1
+  let endIndex = totalAmount
   let visibleData = data
-  const totalSize = data.length * itemSize
   let offset = 0
 
   // Expand visible size with 1 buffer item at the top, 1 at the bottom.
   const visibleAmount = Math.ceil((visibleSize + 2 * itemSize) / itemSize) + bufferAmount
-  if (visibleAmount < totalSize) {
+  if (visibleAmount < totalAmount) {
     const scrolledAmount = Math.floor(scrolledDistance / itemSize)
-    halfBufferAmount = bufferAmount < 1 ? 1 : Math.ceil(bufferAmount / 2)
     startIndex = Math.floor(scrolledAmount / halfBufferAmount) * halfBufferAmount
-    endIndex = startIndex + visibleAmount + 1
+    endIndex = startIndex + visibleAmount
 
     visibleData = data.slice(startIndex, endIndex)
     offset = startIndex * itemSize
