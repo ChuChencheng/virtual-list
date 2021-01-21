@@ -41,9 +41,12 @@ function fixedSizeVirtualList<Data>({
   // Expand visible size with 1 buffer item at the top, 1 at the bottom.
   const visibleAmount = Math.ceil((visibleSize + 2 * itemSize) / itemSize) + bufferAmount
   if (visibleAmount < totalAmount) {
+    // Fix scrolled distance
+    scrolledDistance = Math.min(scrolledDistance, totalSize - visibleSize)
     const scrolledAmount = Math.floor(scrolledDistance / itemSize)
     startIndex = Math.floor(scrolledAmount / halfBufferAmount) * halfBufferAmount
     endIndex = startIndex + visibleAmount
+    endIndex = Math.min(endIndex, totalAmount)
 
     visibleData = data.slice(startIndex, endIndex)
     offset = startIndex * itemSize
