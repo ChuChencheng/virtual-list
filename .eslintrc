@@ -1,6 +1,15 @@
 {
   "root": true,
+  "env": {
+    "browser": true,
+    "es2021": true,
+    "node": true
+  },
   "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaVersion": 12,
+    "sourceType": "module"
+  },
   "plugins": [
     "@typescript-eslint"
   ],
@@ -12,6 +21,8 @@
     "comma-dangle": ["warn", "always-multiline"],
     "quotes": ["warn", "single"],
     "indent": ["warn", 2],
+    "linebreak-style": ["error", "unix"],
+    "semi": ["warn", "never"],
     "@typescript-eslint/indent": ["warn", 2]
   }
 }
