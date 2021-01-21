@@ -56,7 +56,23 @@ describe('Fixed height', () => {
     expect(result.offset).toBe(0)
   })
 
-  it('wrong scroll distance', () => {})
+  it('wrong scrolled distance', () => {
+    const dataLength = 1000
+    const result = virtualList({
+      data: getData(dataLength),
+      scrolledDistance: dataLength * 50,
+      visibleSize: 320,
+      bufferAmount: 20,
+      itemSize: 50,
+    })
+
+    expect(result.startIndex).toBe(990)
+    expect(result.endIndex).toBe(1000)
+    expect(result.halfBufferAmount).toBe(10)
+    expect(result.visibleData.length).toBe(10)
+    expect(result.totalSize).toBe(dataLength * 50)
+    expect(result.offset).toBe(49500)
+  })
 
   it('small visible size', () => {})
 
