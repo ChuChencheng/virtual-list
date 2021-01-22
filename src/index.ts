@@ -2,7 +2,7 @@ interface IVirtualListBaseParameters<Data> {
   data: Data[]
   scrolledDistance: number
   visibleSize: number
-  bufferAmount: number
+  bufferAmount?: number
 }
 
 export interface IFixedSizeParameters<Data> extends IVirtualListBaseParameters<Data> {
@@ -21,6 +21,7 @@ export interface IVirtualListReturnValue<Data> {
   visibleData: Data[]
   totalSize: number
   offset: number
+  correctedScrolledDistance: number
 }
 
 function fixedSizeVirtualList<Data>({
@@ -37,19 +38,23 @@ function fixedSizeVirtualList<Data>({
   let endIndex = totalAmount
   let visibleData = data
   let offset = 0
+  let correctedScrolledDistance = scrolledDistance
 
-  // Expand visible size with 1 buffer item at the top, 1 at the bottom.
-  const visibleAmount = Math.ceil((visibleSize + 2 * itemSize) / itemSize) + bufferAmount
-  if (visibleAmount < totalAmount) {
-    // Fix scrolled distance
-    scrolledDistance = Math.min(scrolledDistance, totalSize - visibleSize)
-    const scrolledAmount = Math.floor(scrolledDistance / itemSize)
-    startIndex = Math.floor(scrolledAmount / halfBufferAmount) * halfBufferAmount
-    endIndex = startIndex + visibleAmount
-    endIndex = Math.min(endIndex, totalAmount)
-
-    visibleData = data.slice(startIndex, endIndex)
-    offset = startIndex * itemSize
+  if (itemSize > 0) {
+    // Expand visible size with 1 buffer item at the top, 1 at the bottom.
+    const visibleAmount = Math.ceil((visibleSize + 2 * itemSize) / itemSize) + Math.max(bufferAmount, 1)
+    if (visibleAmount < totalAmount) {
+      // Correct scrolled distance
+      correctedScrolledDistance = Math.min(Math.max(scrolledDistance, 0), totalSize - visibleSize)
+  
+      const scrolledAmount = Math.floor(correctedScrolledDistance / itemSize)
+      startIndex = Math.floor(scrolledAmount / halfBufferAmount) * halfBufferAmount
+      endIndex = startIndex + visibleAmount
+      endIndex = Math.min(endIndex, totalAmount)
+  
+      visibleData = data.slice(startIndex, endIndex)
+      offset = startIndex * itemSize
+    }
   }
 
   return {
@@ -59,6 +64,7 @@ function fixedSizeVirtualList<Data>({
     visibleData,
     totalSize,
     offset,
+    correctedScrolledDistance,
   }
 }
 
@@ -77,19 +83,24 @@ export default function virtualList<Data> (params: any): IVirtualListReturnValue
       itemSize: dynamicSizeParams.itemMinSize,
     })
 
-    const { data, itemMinSize, scrolledDistance, sizes } = dynamicSizeParams
-    const { startIndex, halfBufferAmount } = fixedSizeReturnValue
-    const dataLength = data.length
+    if (dynamicSizeParams.itemMinSize <= 0) return fixedSizeReturnValue
 
-    let bufferSize = 0
+    const { itemMinSize, sizes } = dynamicSizeParams
+    const { startIndex, correctedScrolledDistance } = fixedSizeReturnValue
+    const visibleScrolledAmount = Math.floor(correctedScrolledDistance / itemMinSize) - startIndex
+
     let i
-    for (i = 0; i < halfBufferAmount; i++) {
+    for (i = 0; i < visibleScrolledAmount; i++) {
       const index = i + startIndex
-      if (index >= dataLength) break
-      bufferSize += sizes[index] || itemMinSize
+      const bufferSize = sizes[index] || itemMinSize
+
+      fixedSizeReturnValue.offset -= bufferSize - itemMinSize
     }
-    const restDistance = scrolledDistance - fixedSizeReturnValue.offset
-    fixedSizeReturnValue.offset -= restDistance * (bufferSize / (i * itemMinSize) - 1)
+    
+    if (correctedScrolledDistance % itemMinSize) {
+      const scrolledRate = (correctedScrolledDistance / itemMinSize - startIndex) - visibleScrolledAmount
+      fixedSizeReturnValue.offset -= ((sizes[i + startIndex] || itemMinSize) - itemMinSize) * scrolledRate
+    }
 
     return fixedSizeReturnValue
   }
