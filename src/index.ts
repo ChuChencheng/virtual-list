@@ -68,33 +68,28 @@ function fixedSizeVirtualList<Data>({
   }
 }
 
+function isFixedParameters <Data>(params: IFixedSizeParameters<Data> | IDynamicSizeParameters<Data>): params is IFixedSizeParameters<Data> {
+  return typeof (params as IDynamicSizeParameters<Data>).itemMinSize !== 'number'
+}
 
-export default function virtualList<Data> (params: IFixedSizeParameters<Data>): IVirtualListReturnValue<Data>
-export default function virtualList<Data> (params: IDynamicSizeParameters<Data>): IVirtualListReturnValue<Data>
-export default function virtualList<Data> (params: any): IVirtualListReturnValue<Data> {
-  const isFixedSize = typeof params.itemMinSize !== 'number'
-
-  if (isFixedSize) {
+export default function virtualList <Data>(params: IFixedSizeParameters<Data> | IDynamicSizeParameters<Data>): IVirtualListReturnValue<Data> {
+  if (isFixedParameters(params)) {
     return fixedSizeVirtualList(params as IFixedSizeParameters<Data>)
   } else {
-    const dynamicSizeParams: IDynamicSizeParameters<Data> = params
     const fixedSizeReturnValue = fixedSizeVirtualList({
-      ...dynamicSizeParams,
-      itemSize: dynamicSizeParams.itemMinSize,
+      ...params,
+      itemSize: params.itemMinSize,
     })
 
-    if (dynamicSizeParams.itemMinSize <= 0) return fixedSizeReturnValue
+    if (params.itemMinSize <= 0) return fixedSizeReturnValue
 
-    const { itemMinSize, sizes } = dynamicSizeParams
+    const { itemMinSize, sizes } = params
     const { startIndex, correctedScrolledDistance } = fixedSizeReturnValue
     const visibleScrolledAmount = Math.floor(correctedScrolledDistance / itemMinSize) - startIndex
 
     let i
     for (i = 0; i < visibleScrolledAmount; i++) {
-      const index = i + startIndex
-      const bufferSize = sizes[index] || itemMinSize
-
-      fixedSizeReturnValue.offset -= bufferSize - itemMinSize
+      fixedSizeReturnValue.offset -= (sizes[i + startIndex] || itemMinSize) - itemMinSize
     }
     
     if (correctedScrolledDistance % itemMinSize) {
