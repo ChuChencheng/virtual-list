@@ -24,7 +24,7 @@ export interface IVirtualListReturnValue<Data> {
   correctedScrolledDistance: number
 }
 
-function fixedSizeVirtualList<Data>({
+function fixedSizeVirtualList <Data>({
   data,
   itemSize,
   scrolledDistance,
