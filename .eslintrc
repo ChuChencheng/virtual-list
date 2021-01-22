@@ -18,11 +18,16 @@
     "plugin:@typescript-eslint/recommended"
   ],
   "rules": {
+    "brace-style": ["warn", "1tbs"],
     "comma-dangle": ["warn", "always-multiline"],
     "quotes": ["warn", "single"],
     "indent": ["warn", 2],
+    "keyword-spacing": "off",
     "linebreak-style": ["error", "unix"],
     "semi": ["warn", "never"],
-    "@typescript-eslint/indent": ["warn", 2]
+    "@typescript-eslint/indent": ["warn", 2],
+    "@typescript-eslint/keyword-spacing": ["warn", { "before": true, "after": true }],
+    "@typescript-eslint/member-delimiter-style": ["warn", "none"],
+    "@typescript-eslint/space-infix-ops": ["error", { "int32Hint": false }]
   }
 }
