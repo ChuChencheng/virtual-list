@@ -24,7 +24,7 @@ export interface IVirtualListReturnValue<Data> {
   correctedScrolledDistance: number
 }
 
-function fixedSizeVirtualList <Data>({
+function fixedSizeVirtualList <Data> ({
   data,
   itemSize,
   scrolledDistance,
@@ -68,11 +68,11 @@ function fixedSizeVirtualList <Data>({
   }
 }
 
-function isFixedParameters <Data>(params: IFixedSizeParameters<Data> | IDynamicSizeParameters<Data>): params is IFixedSizeParameters<Data> {
+function isFixedParameters <Data> (params: IFixedSizeParameters<Data> | IDynamicSizeParameters<Data>): params is IFixedSizeParameters<Data> {
   return typeof (params as IDynamicSizeParameters<Data>).itemMinSize !== 'number'
 }
 
-export default function virtualList <Data>(params: IFixedSizeParameters<Data> | IDynamicSizeParameters<Data>): IVirtualListReturnValue<Data> {
+export default function virtualList <Data> (params: IFixedSizeParameters<Data> | IDynamicSizeParameters<Data>): IVirtualListReturnValue<Data> {
   if (isFixedParameters(params)) {
     return fixedSizeVirtualList(params as IFixedSizeParameters<Data>)
   } else {

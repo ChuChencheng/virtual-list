@@ -20,14 +20,19 @@
   "rules": {
     "brace-style": ["warn", "1tbs"],
     "comma-dangle": ["warn", "always-multiline"],
+    "comma-spacing": "off",
     "quotes": ["warn", "single"],
     "indent": ["warn", 2],
     "keyword-spacing": "off",
+    "space-before-function-paren": "off",
     "linebreak-style": ["error", "unix"],
     "semi": ["warn", "never"],
     "@typescript-eslint/indent": ["warn", 2],
     "@typescript-eslint/keyword-spacing": ["warn", { "before": true, "after": true }],
     "@typescript-eslint/member-delimiter-style": ["warn", { "multiline": { "delimiter": "none" } }],
-    "@typescript-eslint/space-infix-ops": ["error", { "int32Hint": false }]
+    "@typescript-eslint/space-before-function-paren": ["warn", "always"],
+    "@typescript-eslint/comma-spacing": ["warn", { "before": false, "after": true }],
+    "@typescript-eslint/space-infix-ops": ["warn", { "int32Hint": false }],
+    "@typescript-eslint/type-annotation-spacing": ["warn", { "before": false, "after": true }]
   }
 }
