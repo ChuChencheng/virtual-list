@@ -1,102 +1,80 @@
-interface IVirtualListBaseParameters<Data> {
-  data: Data[]
-  scrolledDistance: number
-  visibleSize: number
-  bufferAmount?: number
-}
+interface IVirtualListParameters {
+  dataLength: number
 
-export interface IFixedSizeParameters<Data> extends IVirtualListBaseParameters<Data> {
-  itemSize: number
-}
-
-export interface IDynamicSizeParameters<Data> extends IVirtualListBaseParameters<Data> {
   itemMinSize: number
-  sizes: number[]
+
+  viewportSize: number
+
+  bufferCount?: number
 }
 
-export interface IVirtualListReturnValue<Data> {
-  startIndex: number
-  endIndex: number
-  halfBufferAmount: number
-  visibleData: Data[]
+interface IViewportRange {
   totalSize: number
+
+  startIndex: number
+
+  endIndex: number
+
   offset: number
-  correctedScrolledDistance: number
 }
 
-function fixedSizeVirtualList <Data> ({
-  data,
-  itemSize,
-  scrolledDistance,
-  visibleSize,
-  bufferAmount = 20,
-}: IFixedSizeParameters<Data>): IVirtualListReturnValue<Data> {
-  const halfBufferAmount = bufferAmount < 1 ? 1 : Math.ceil(bufferAmount / 2)
-  const totalAmount = data.length
-  const totalSize = totalAmount * itemSize
-  let startIndex = 0
-  let endIndex = totalAmount
-  let visibleData = data
-  let offset = 0
-  let correctedScrolledDistance = scrolledDistance
+class VirtualList {
+  private dataLength!: number
 
-  if (itemSize > 0) {
-    // Expand visible size with 1 buffer item at the top, 1 at the bottom.
-    const visibleAmount = Math.ceil((visibleSize + 2 * itemSize) / itemSize) + Math.max(bufferAmount, 1)
-    if (visibleAmount < totalAmount) {
-      // Correct scrolled distance
-      correctedScrolledDistance = Math.min(Math.max(scrolledDistance, 0), totalSize - visibleSize)
-  
-      const scrolledAmount = Math.floor(correctedScrolledDistance / itemSize)
-      startIndex = Math.floor(scrolledAmount / halfBufferAmount) * halfBufferAmount
-      endIndex = startIndex + visibleAmount
-      endIndex = Math.min(endIndex, totalAmount)
-  
-      visibleData = data.slice(startIndex, endIndex)
-      offset = startIndex * itemSize
-    }
+  private totalSize!: number
+
+  private itemMinSize!: number
+
+  private viewportSize!: number
+
+  private bufferCount!: number
+
+  constructor (parameters: IVirtualListParameters) {
+    this.itemMinSize = parameters.itemMinSize
+    this.bufferCount = parameters.bufferCount || 20
+    this.setViewportSize(parameters.viewportSize)
+    this.setDataLength(parameters.dataLength)
   }
 
-  return {
-    startIndex,
-    endIndex,
-    halfBufferAmount,
-    visibleData,
-    totalSize,
-    offset,
-    correctedScrolledDistance,
+  setDataLength (dataLength: number): void {
+    const { itemMinSize } = this
+    this.dataLength = dataLength
+    this.totalSize = itemMinSize * this.dataLength
   }
-}
 
-function isFixedParameters <Data> (params: IFixedSizeParameters<Data> | IDynamicSizeParameters<Data>): params is IFixedSizeParameters<Data> {
-  return typeof (params as IDynamicSizeParameters<Data>).itemMinSize !== 'number'
-}
+  setViewportSize (viewportSize: number): void {
+    this.viewportSize = viewportSize
+  }
 
-export default function virtualList <Data> (params: IFixedSizeParameters<Data> | IDynamicSizeParameters<Data>): IVirtualListReturnValue<Data> {
-  if (isFixedParameters(params)) {
-    return fixedSizeVirtualList(params as IFixedSizeParameters<Data>)
-  } else {
-    const fixedSizeReturnValue = fixedSizeVirtualList({
-      ...params,
-      itemSize: params.itemMinSize,
-    })
+  getViewportRange (scrolledSize: number, visibleItemRealSizeList: number[]  = []): IViewportRange {
+    const { viewportSize, itemMinSize, dataLength, totalSize, bufferCount } = this
+    const viewportCount = Math.ceil(viewportSize / itemMinSize)
+    const visibleCount = viewportCount + bufferCount
+    const startIndex = Math.floor(Math.floor(scrolledSize / itemMinSize) / bufferCount) * bufferCount
+    const endIndex = Math.min(visibleCount + startIndex, dataLength)
 
-    if (params.itemMinSize <= 0) return fixedSizeReturnValue
+    const realVisibleCount = endIndex - startIndex
+    const isLastScroll = visibleCount !== realVisibleCount
+    let scrollableSize = 1
+    let realScrollableSize = 1
 
-    const { itemMinSize, sizes } = params
-    const { startIndex, correctedScrolledDistance } = fixedSizeReturnValue
-    const visibleScrolledAmount = Math.floor(correctedScrolledDistance / itemMinSize) - startIndex
-
-    let i
-    for (i = 0; i < visibleScrolledAmount; i++) {
-      fixedSizeReturnValue.offset -= (sizes[i + startIndex] || itemMinSize) - itemMinSize
+    if (isLastScroll) {
+      scrollableSize = realVisibleCount * itemMinSize - viewportSize
+      realScrollableSize = (visibleItemRealSizeList.reduce((sum, current) => sum + current, 0) || scrollableSize) - viewportSize
+    } else {
+      scrollableSize = bufferCount * itemMinSize
+      realScrollableSize = visibleItemRealSizeList.slice(0, bufferCount).reduce((sum, current) => sum + current, 0) || scrollableSize
     }
     
-    if (correctedScrolledDistance % itemMinSize) {
-      const scrolledRate = (correctedScrolledDistance / itemMinSize - startIndex) - visibleScrolledAmount
-      fixedSizeReturnValue.offset -= ((sizes[i + startIndex] || itemMinSize) - itemMinSize) * scrolledRate
-    }
+    const offset = scrolledSize - (scrolledSize - startIndex * itemMinSize) * realScrollableSize / scrollableSize
 
-    return fixedSizeReturnValue
+    return {
+      totalSize,
+      startIndex,
+      endIndex,
+      offset,
+    }
   }
 }
+
+export default VirtualList

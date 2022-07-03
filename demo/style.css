@@ -1,0 +1,27 @@
+* {
+  padding: 0;
+  margin: 0;
+}
+
+#app {
+  display: flex;
+  justify-content: center;
+  margin-top: 50px;
+}
+
+.virtual-list-viewport {
+  width: 200px;
+  height: 400px;
+  overflow: auto;
+}
+
+.virtual-list-whole {
+  position: relative;
+  overflow: hidden;
+}
+
+.virtual-list-item-container {
+  position: absolute;
+  top: 0;
+  width: 100%;
+}
