@@ -1,80 +1,67 @@
-interface IVirtualListParameters {
-  dataLength: number
+const DEFAULT_BUFFER_COUNT = 20
 
-  itemMinSize: number
-
+export interface IVirtualListGetRangeParameters {
+  scrolledSize: number
   viewportSize: number
-
+  dataLength: number
+  itemMinSize: number
   bufferCount?: number
 }
 
-interface IViewportRange {
-  totalSize: number
-
+export interface IVirtualListGetOffsetParameters extends Omit<IVirtualListGetRangeParameters, 'dataLength'> {
   startIndex: number
-
   endIndex: number
-
-  offset: number
+  estimatedRenderCount: number
+  visibleItemRealSizeList: number[]
 }
 
-class VirtualList {
-  private dataLength!: number
-
-  private totalSize!: number
-
-  private itemMinSize!: number
-
-  private viewportSize!: number
-
-  private bufferCount!: number
-
-  constructor (parameters: IVirtualListParameters) {
-    this.itemMinSize = parameters.itemMinSize
-    this.bufferCount = parameters.bufferCount || 20
-    this.setViewportSize(parameters.viewportSize)
-    this.setDataLength(parameters.dataLength)
-  }
-
-  setDataLength (dataLength: number): void {
-    const { itemMinSize } = this
-    this.dataLength = dataLength
-    this.totalSize = itemMinSize * this.dataLength
-  }
-
-  setViewportSize (viewportSize: number): void {
-    this.viewportSize = viewportSize
-  }
-
-  getViewportRange (scrolledSize: number, visibleItemRealSizeList: number[]  = []): IViewportRange {
-    const { viewportSize, itemMinSize, dataLength, totalSize, bufferCount } = this
+const VirtualList = {
+  getRange ({
+    scrolledSize,
+    viewportSize,
+    dataLength,
+    itemMinSize,
+    bufferCount = DEFAULT_BUFFER_COUNT,
+  }: IVirtualListGetRangeParameters): { startIndex: number; endIndex: number; estimatedRenderCount: number } {
     const viewportCount = Math.ceil(viewportSize / itemMinSize)
-    const visibleCount = viewportCount + bufferCount
+    const estimatedRenderCount = viewportCount + bufferCount
     const startIndex = Math.floor(Math.floor(scrolledSize / itemMinSize) / bufferCount) * bufferCount
-    const endIndex = Math.min(visibleCount + startIndex, dataLength)
+    const endIndex = Math.min(estimatedRenderCount + startIndex, dataLength)
 
-    const realVisibleCount = endIndex - startIndex
-    const isLastScroll = visibleCount !== realVisibleCount
+    return {
+      startIndex,
+      endIndex,
+      estimatedRenderCount,
+    }
+  },
+
+  getOffset ({
+    scrolledSize,
+    startIndex,
+    endIndex,
+    estimatedRenderCount,
+    viewportSize,
+    itemMinSize,
+    visibleItemRealSizeList,
+    bufferCount = DEFAULT_BUFFER_COUNT,
+  }: IVirtualListGetOffsetParameters): number {
+    const renderCount = endIndex - startIndex
+    const isLastScroll = renderCount !== estimatedRenderCount
     let scrollableSize = 1
     let realScrollableSize = 1
 
     if (isLastScroll) {
-      scrollableSize = realVisibleCount * itemMinSize - viewportSize
+      scrollableSize = renderCount * itemMinSize - viewportSize
       realScrollableSize = (visibleItemRealSizeList.reduce((sum, current) => sum + current, 0) || scrollableSize) - viewportSize
     } else {
       scrollableSize = bufferCount * itemMinSize
       realScrollableSize = visibleItemRealSizeList.slice(0, bufferCount).reduce((sum, current) => sum + current, 0) || scrollableSize
     }
-    
+
     const offset = scrolledSize - (scrolledSize - startIndex * itemMinSize) * realScrollableSize / scrollableSize
 
-    return {
-      totalSize,
-      startIndex,
-      endIndex,
-      offset,
-    }
-  }
+    return offset
+  },
 }
 
 export default VirtualList

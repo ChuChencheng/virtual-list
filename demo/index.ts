@@ -3,7 +3,7 @@ import './style.css'
 
 const data: Array<{ index: number; height: number}> = []
 
-for (let i = 0; i < 10000; i++) {
+for (let i = 0; i < 100000; i++) {
   data.push({
     index: i,
     height: 30,
@@ -32,23 +32,18 @@ const itemMinSize = 30
 let previousStartIndex = -1
 let previousEndIndex = -1
 
-const virtualList = new VirtualList({
-  dataLength,
-  itemMinSize,
-  viewportSize: clientHeight,
-})
-
-const getRange = (scrollTop: number, visibleItemRealSizeList: number[] = []) => {
-  return virtualList.getViewportRange(scrollTop, visibleItemRealSizeList)
-}
-
 const handleScroll = () => {
   const scrollTop = $viewport?.scrollTop || 0
-  const { totalSize, startIndex, endIndex } = getRange(scrollTop)
+  const { startIndex, endIndex, estimatedRenderCount } = VirtualList.getRange({
+    scrolledSize: scrollTop,
+    viewportSize: clientHeight,
+    dataLength,
+    itemMinSize,
+  })
   const visibleData = data.slice(startIndex, endIndex)
 
   if ($whole?.style) {
-    $whole.style.height = `${totalSize}px`
+    $whole.style.height = `${dataLength * itemMinSize}px`
   }
 
   if ($itemContainer) {
@@ -71,7 +66,15 @@ const handleScroll = () => {
       visibleItemRealSizeList.push($item.offsetHeight)
     })
 
-    const { offset } = getRange(scrollTop, visibleItemRealSizeList)
+    const offset = VirtualList.getOffset({
+      scrolledSize: scrollTop,
+      startIndex,
+      endIndex,
+      estimatedRenderCount,
+      viewportSize: clientHeight,
+      itemMinSize,
+      visibleItemRealSizeList,
+    })
 
     $itemContainer.style.transform = `translateY(${offset}px)`
   }
