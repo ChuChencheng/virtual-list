@@ -51,7 +51,7 @@ const positionArray = [
 
 $scrollToButton?.addEventListener('click', () => {
   const nextPosition = positionArray[i % positionArray.length]
-  const scrollTop = virtualListInstance.getScrolledSizeByIndex(30000, nextPosition)
+  const scrollTop = virtualListInstance.getScrolledSizeByIndex(30005, nextPosition)
   if ($viewport) {
     $viewport.scrollTop = scrollTop
   }
