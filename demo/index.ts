@@ -36,36 +36,19 @@ const itemMinSize = 30
 let previousStartIndex = -1
 let previousEndIndex = -1
 
+if ($whole?.style) {
+  $whole.style.height = `${dataLength * itemMinSize}px`
+}
+
 const virtualListInstance = new VirtualList({
   viewportSize: clientHeight,
   dataLength,
   itemMinSize,
 })
 
-let i = 0
-const positionArray = [
-  GET_SCROLLED_SIZE_POSITION_ENUM.TOP,
-  GET_SCROLLED_SIZE_POSITION_ENUM.MIDDLE,
-  GET_SCROLLED_SIZE_POSITION_ENUM.BOTTOM,
-]
-
-$scrollToButton?.addEventListener('click', () => {
-  const nextPosition = positionArray[i % positionArray.length]
-  const scrollTop = virtualListInstance.getScrolledSizeByIndex(30005, nextPosition)
-  if ($viewport) {
-    $viewport.scrollTop = scrollTop
-  }
-  i++
-})
-
-const handleScroll = () => {
-  const scrollTop = $viewport?.scrollTop || 0
-  const { startIndex, endIndex } = virtualListInstance.getRange(scrollTop)
+const setItem = (startIndex: number, endIndex: number) => {
   const visibleData = data.slice(startIndex, endIndex)
-
-  if ($whole?.style) {
-    $whole.style.height = `${dataLength * itemMinSize}px`
-  }
+  const visibleItemRealSizeList: number[] = []
 
   if ($itemContainer) {
     if (startIndex !== previousStartIndex || endIndex !== previousEndIndex) {
@@ -82,20 +65,66 @@ const handleScroll = () => {
     }
 
     const $items: NodeListOf<HTMLDivElement> = $itemContainer.querySelectorAll('.virtual-list-item')
-    const visibleItemRealSizeList: number[] = []
     $items.forEach(($item) => {
       visibleItemRealSizeList.push($item.offsetHeight)
     })
+  }
 
-    const offset = virtualListInstance.getOffset({
-      scrolledSize: scrollTop,
-      startIndex,
-      endIndex,
-      visibleItemRealSizeList,
-    })
+  return visibleItemRealSizeList
+}
 
+const setItemContainerOffset = (offset: number) => {
+  if ($itemContainer) {
     $itemContainer.style.transform = `translateY(${offset}px)`
   }
+}
+
+let i = 0
+const positionArray = [
+  GET_SCROLLED_SIZE_POSITION_ENUM.TOP,
+  GET_SCROLLED_SIZE_POSITION_ENUM.MIDDLE,
+  GET_SCROLLED_SIZE_POSITION_ENUM.BOTTOM,
+]
+
+$scrollToButton?.addEventListener('click', () => {
+  const dataIndex = 30009
+  const nextPosition = positionArray[i % positionArray.length]
+  const scrollTop = virtualListInstance.getScrolledSizeByIndex(dataIndex, nextPosition)
+  const { startIndex, endIndex } = virtualListInstance.getRange(scrollTop)
+  // Set items DOM to get real size
+  const visibleItemRealSizeList = setItem(startIndex, endIndex)
+  const { ratio, offset } = virtualListInstance.getOffset({
+    scrolledSize: scrollTop,
+    startIndex,
+    endIndex,
+    visibleItemRealSizeList,
+  })
+  const adjustedScrolledSize = virtualListInstance.getAdjustedScrolledSize({
+    scrolledSize: scrollTop,
+    offset,
+    startIndex,
+    dataIndex,
+    ratio,
+    visibleItemRealSizeList,
+  })
+  if ($viewport) {
+    $viewport.scrollTop = adjustedScrolledSize
+  }
+  i++
+})
+
+const handleScroll = () => {
+  const scrollTop = $viewport?.scrollTop || 0
+  const { startIndex, endIndex } = virtualListInstance.getRange(scrollTop)
+
+  const visibleItemRealSizeList = setItem(startIndex, endIndex)
+  const { offset } = virtualListInstance.getOffset({
+    scrolledSize: scrollTop,
+    startIndex,
+    endIndex,
+    visibleItemRealSizeList,
+  })
+  setItemContainerOffset(offset)
 }
 
 $viewport?.addEventListener('scroll', handleScroll)
