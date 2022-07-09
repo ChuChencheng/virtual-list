@@ -14,11 +14,23 @@ const $app = document.getElementById('app')
 
 if ($app) {
   $app.innerHTML = `
-    <div>
-      <button class="scroll-to-button">Scroll to</button>
+    <div class="list-container">
+      <div class="top-bar">
+        <button class="scroll-to-button">Scroll to</button>
+      </div>
       <div class="virtual-list-viewport">
         <div class="virtual-list-whole">
           <div class="virtual-list-item-container"></div>
+        </div>
+      </div>
+    </div>
+    <div class="list-container">
+      <div class="top-bar">
+        Comparison
+      </div>
+      <div class="virtual-list-viewport-comparison">
+        <div class="virtual-list-whole-comparison">
+          <div class="virtual-list-item-container-comparison"></div>
         </div>
       </div>
     </div>
@@ -26,8 +38,11 @@ if ($app) {
 }
 
 const $viewport: HTMLDivElement | null = document.querySelector('.virtual-list-viewport')
-const $whole: HTMLDivElement | null = document.querySelector('.virtual-list-whole')
+const $comparisonViewport: HTMLDivElement | null = document.querySelector('.virtual-list-viewport-comparison')
 const $itemContainer: HTMLDivElement | null = document.querySelector('.virtual-list-item-container')
+const $comparisonItemContainer: HTMLDivElement | null = document.querySelector('.virtual-list-item-container-comparison')
+const $whole: HTMLDivElement | null = document.querySelector('.virtual-list-whole')
+const $comparisonWhole: HTMLDivElement | null = document.querySelector('.virtual-list-whole-comparison')
 const $scrollToButton: HTMLButtonElement | null = document.querySelector('.scroll-to-button')
 
 const clientHeight = $viewport?.clientHeight || 0
@@ -36,8 +51,9 @@ const itemMinSize = 30
 let previousStartIndex = -1
 let previousEndIndex = -1
 
-if ($whole?.style) {
+if ($whole?.style && $comparisonWhole?.style) {
   $whole.style.height = `${dataLength * itemMinSize}px`
+  $comparisonWhole.style.height = `${dataLength * itemMinSize}px`
 }
 
 const virtualListInstance = new VirtualList({
@@ -50,13 +66,21 @@ const setItem = (startIndex: number, endIndex: number) => {
   const visibleData = data.slice(startIndex, endIndex)
   const visibleItemRealSizeList: number[] = []
 
-  if ($itemContainer) {
+  if ($itemContainer && $comparisonItemContainer) {
     if (startIndex !== previousStartIndex || endIndex !== previousEndIndex) {
       $itemContainer.innerHTML = visibleData.map((d, i) => {
         return `
           <div
             class="virtual-list-item"
             style="min-height:${30 + (i % 10) * 10}px;"
+          >${d.index}</div>
+        `
+      }).join('')
+      $comparisonItemContainer.innerHTML = visibleData.map((d, i) => {
+        return `
+          <div
+            class="virtual-list-item"
+            style="min-height:${30}px;"
           >${d.index}</div>
         `
       }).join('')
@@ -73,12 +97,6 @@ const setItem = (startIndex: number, endIndex: number) => {
   return visibleItemRealSizeList
 }
 
-const setItemContainerOffset = (offset: number) => {
-  if ($itemContainer) {
-    $itemContainer.style.transform = `translateY(${offset}px)`
-  }
-}
-
 let i = 0
 const positionArray = [
   GET_SCROLLED_SIZE_POSITION_ENUM.TOP,
@@ -87,7 +105,7 @@ const positionArray = [
 ]
 
 $scrollToButton?.addEventListener('click', () => {
-  const dataIndex = 30009
+  const dataIndex = 30041
   const nextPosition = positionArray[i % positionArray.length]
   const scrollTop = virtualListInstance.getScrolledSizeByIndex(dataIndex, nextPosition)
   const { startIndex, endIndex } = virtualListInstance.getRange(scrollTop)
@@ -109,12 +127,12 @@ $scrollToButton?.addEventListener('click', () => {
   })
   if ($viewport) {
     $viewport.scrollTop = adjustedScrolledSize
+    // $viewport.scrollTop = scrollTop
   }
   i++
 })
 
-const handleScroll = () => {
-  const scrollTop = $viewport?.scrollTop || 0
+const handleScroll = (scrollTop: number) => {
   const { startIndex, endIndex } = virtualListInstance.getRange(scrollTop)
 
   const visibleItemRealSizeList = setItem(startIndex, endIndex)
@@ -124,9 +142,36 @@ const handleScroll = () => {
     endIndex,
     visibleItemRealSizeList,
   })
-  setItemContainerOffset(offset)
+  const { offset: comparisonOffset } = virtualListInstance.getOffset({
+    scrolledSize: scrollTop,
+    startIndex,
+    endIndex,
+    visibleItemRealSizeList: [],
+  })
+  if ($itemContainer && $comparisonItemContainer) {
+    $itemContainer.style.transform = `translateY(${offset}px)`
+    $comparisonItemContainer.style.transform = `translateY(${comparisonOffset}px)`
+  }
 }
 
-$viewport?.addEventListener('scroll', handleScroll)
+const handleViewportScroll = () => {
+  const scrollTop = $viewport?.scrollTop || 0
+  handleScroll(scrollTop)
+  if ($comparisonViewport && scrollTop !== $comparisonViewport.scrollTop) {
+    $comparisonViewport.scrollTop = scrollTop
+  }
+}
 
-handleScroll()
+const handleComparisonViewportScroll = () => {
+  const scrollTop = $comparisonViewport?.scrollTop || 0
+  handleScroll(scrollTop)
+  if ($viewport && scrollTop !== $viewport.scrollTop) {
+    $viewport.scrollTop = scrollTop
+  }
+}
+
+$viewport?.addEventListener('scroll', handleViewportScroll)
+$comparisonViewport?.addEventListener('scroll', handleComparisonViewportScroll)
+
+handleViewportScroll()
+handleComparisonViewportScroll()

@@ -6,21 +6,30 @@
 #app {
   display: flex;
   justify-content: center;
-  margin-top: 50px;
 }
 
-.virtual-list-viewport {
+.list-container {
+  display: flex;
+  flex-direction: column;
   width: 200px;
+}
+
+.top-bar {
+  height: 50px;
+}
+
+.virtual-list-viewport, .virtual-list-viewport-comparison {
   height: 400px;
   overflow: auto;
+  border: 1px solid pink;
 }
 
-.virtual-list-whole {
+.virtual-list-whole, .virtual-list-whole-comparison {
   position: relative;
   overflow: hidden;
 }
 
-.virtual-list-item-container {
+.virtual-list-item-container, .virtual-list-item-container-comparison {
   position: absolute;
   top: 0;
   width: 100%;
