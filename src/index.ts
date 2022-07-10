@@ -5,10 +5,26 @@ const getSum = (array: number[], startIndex: number, endIndex: number): number =
   return array.slice(startIndex, endIndex).reduce((sum, current) => sum + current, 0)
 }
 
+const getNumberInRange = (num: number, min: number, max: number) => {
+  return Math.max(min, Math.min(max, num))
+}
+
 export enum GET_SCROLLED_SIZE_POSITION_ENUM {
   TOP = 'TOP',
   MIDDLE = 'MIDDLE',
   BOTTOM = 'BOTTOM',
+}
+
+interface IGetRatioParameters {
+  startIndex: number
+  endIndex: number
+  visibleItemRealSizeList: number[]
+}
+
+interface IGetScrollToRangeReturnValue {
+  startIndex: number
+  endIndex: number
+  sizeFromViewportStartToIndex: number
 }
 
 export interface IVirtualListOptions {
@@ -18,20 +34,12 @@ export interface IVirtualListOptions {
   bufferCount?: number
 }
 
-export interface IVirtualListGetOffsetParameters {
+export interface IVirtualListGetOffsetParameters extends IGetRatioParameters {
   scrolledSize: number
-  startIndex: number
-  endIndex: number
-  visibleItemRealSizeList: number[]
 }
 
-export interface IVirtualListGetAdjustedOffsetParameters {
-  scrolledSize: number
-  offset: number
-  startIndex: number
+export interface IVirtualListGetScrollToScrolledSizeParameters extends IGetRatioParameters, IGetScrollToRangeReturnValue {
   dataIndex: number
-  ratio: number
-  visibleItemRealSizeList: number[]
 }
 
 class VirtualList {
@@ -55,6 +63,32 @@ class VirtualList {
     throw new Error(`${VIRTUAL_LIST_LOG_PREFIX} ${field} invalid`)
   }
 
+  private getRatio ({
+    startIndex,
+    endIndex,
+    visibleItemRealSizeList,
+  }: IGetRatioParameters): number {
+    const { bufferCount, estimatedRenderCount } = this
+    const { itemMinSize, viewportSize } = this.options
+
+    const renderCount = endIndex - startIndex
+    const isLastScroll = renderCount !== estimatedRenderCount
+    let scrollableSize = 1
+    let realScrollableSize = 1
+
+    if (isLastScroll) {
+      scrollableSize = renderCount * itemMinSize - viewportSize
+      realScrollableSize = (getSum(visibleItemRealSizeList, 0, visibleItemRealSizeList.length) || scrollableSize) - viewportSize
+    } else {
+      scrollableSize = bufferCount * itemMinSize
+      realScrollableSize = getSum(visibleItemRealSizeList, 0, bufferCount) || scrollableSize
+    }
+
+    const ratio = realScrollableSize > 0 && scrollableSize > 0 ? realScrollableSize / scrollableSize : 1
+
+    return ratio
+  }
+
   getRange (scrolledSize: number): { startIndex: number; endIndex: number } {
     const { bufferCount, estimatedRenderCount } = this
     const { itemMinSize, dataLength } = this.options
@@ -74,23 +108,14 @@ class VirtualList {
     endIndex,
     visibleItemRealSizeList,
   }: IVirtualListGetOffsetParameters): { ratio: number; offset: number } {
-    const { bufferCount, estimatedRenderCount } = this
-    const { itemMinSize, viewportSize } = this.options
+    const { itemMinSize } = this.options
 
-    const renderCount = endIndex - startIndex
-    const isLastScroll = renderCount !== estimatedRenderCount
-    let scrollableSize = 1
-    let realScrollableSize = 1
-
-    if (isLastScroll) {
-      scrollableSize = renderCount * itemMinSize - viewportSize
-      realScrollableSize = (getSum(visibleItemRealSizeList, 0, visibleItemRealSizeList.length) || scrollableSize) - viewportSize
-    } else {
-      scrollableSize = bufferCount * itemMinSize
-      realScrollableSize = getSum(visibleItemRealSizeList, 0, bufferCount) || scrollableSize
-    }
-
-    const ratio = realScrollableSize > 0 && scrollableSize > 0 ? realScrollableSize / scrollableSize : 1
+    const ratio = this.getRatio({
+      startIndex,
+      endIndex,
+      visibleItemRealSizeList,
+    })
+    
     const offset = scrolledSize - (scrolledSize - startIndex * itemMinSize) * ratio
 
     return {
@@ -99,37 +124,48 @@ class VirtualList {
     }
   }
 
-  getScrolledSizeByIndex (dataIndex: number, position: GET_SCROLLED_SIZE_POSITION_ENUM | number): number {
+  getScrollToRange (dataIndex: number, position: GET_SCROLLED_SIZE_POSITION_ENUM | number): IGetScrollToRangeReturnValue {
+    const { bufferCount, estimatedRenderCount } = this
     const { itemMinSize, viewportSize, dataLength } = this.options
 
     let percentage = 0
     if (typeof position === 'number') {
-      percentage = position
+      percentage = getNumberInRange(position, 0, 1)
     } else if (position === GET_SCROLLED_SIZE_POSITION_ENUM.MIDDLE) {
       percentage = 0.5
     } else if (position === GET_SCROLLED_SIZE_POSITION_ENUM.BOTTOM) {
       percentage = 1
     }
 
-    const scrolledSize = dataIndex * itemMinSize - (viewportSize - itemMinSize) * percentage
-    const maxScrolledSize = dataLength * itemMinSize - viewportSize
-    return Math.max(0, Math.min(maxScrolledSize, scrolledSize))
+    const sizeFromViewportStartToIndex = (viewportSize - itemMinSize) * percentage
+    const viewportStartIndex = getNumberInRange(dataIndex - Math.ceil(sizeFromViewportStartToIndex / itemMinSize), 0, dataLength - 1)
+    const startIndex = Math.floor(viewportStartIndex / bufferCount) * bufferCount
+    const endIndex = Math.min(estimatedRenderCount + startIndex, dataLength)
+
+    return {
+      startIndex,
+      endIndex,
+      sizeFromViewportStartToIndex,
+    }
   }
 
-  getAdjustedScrolledSize ({
-    scrolledSize,
-    offset,
-    startIndex,
+  getScrollToScrolledSize ({
     dataIndex,
-    ratio,
+    startIndex,
+    endIndex,
     visibleItemRealSizeList,
-  }: IVirtualListGetAdjustedOffsetParameters): number {
+    sizeFromViewportStartToIndex,
+  }: IVirtualListGetScrollToScrolledSizeParameters): number {
     const { itemMinSize } = this.options
 
-    const sizeToAdjust = offset + getSum(visibleItemRealSizeList, 0, dataIndex - startIndex) - dataIndex * itemMinSize
-    const adjustedScrolledSize = scrolledSize + sizeToAdjust / ratio
+    const ratio = this.getRatio({
+      startIndex,
+      endIndex,
+      visibleItemRealSizeList,
+    })
 
-    return adjustedScrolledSize
+    const realScrolledSize = getSum(visibleItemRealSizeList, 0, dataIndex - startIndex) - sizeFromViewportStartToIndex
+    return realScrolledSize / ratio + startIndex * itemMinSize
   }
 }
 
