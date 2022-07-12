@@ -38,6 +38,12 @@ export interface IVirtualListGetOffsetParameters extends IGetRatioParameters {
   scrolledSize: number
 }
 
+export interface IVirtualListGetScrollToRangeParameters {
+  index: number
+  position: GET_SCROLLED_SIZE_POSITION_ENUM | number
+  itemSize: number
+}
+
 export interface IVirtualListGetScrollToScrolledSizeParameters extends IGetRatioParameters, IGetScrollToRangeReturnValue {
   dataIndex: number
 }
@@ -124,7 +130,11 @@ class VirtualList {
     }
   }
 
-  getScrollToRange (dataIndex: number, position: GET_SCROLLED_SIZE_POSITION_ENUM | number): IGetScrollToRangeReturnValue {
+  getScrollToRange ({
+    index,
+    position,
+    itemSize,
+  }: IVirtualListGetScrollToRangeParameters): IGetScrollToRangeReturnValue {
     const { bufferCount, estimatedRenderCount } = this
     const { itemMinSize, viewportSize, dataLength } = this.options
 
@@ -137,8 +147,8 @@ class VirtualList {
       percentage = 1
     }
 
-    const sizeFromViewportStartToIndex = (viewportSize - itemMinSize) * percentage
-    const viewportStartIndex = getNumberInRange(dataIndex - Math.ceil(sizeFromViewportStartToIndex / itemMinSize), 0, dataLength - 1)
+    const sizeFromViewportStartToIndex = (viewportSize - itemSize) * percentage
+    const viewportStartIndex = getNumberInRange(index - Math.ceil(sizeFromViewportStartToIndex / itemMinSize), 0, dataLength - 1)
     const startIndex = Math.floor(viewportStartIndex / bufferCount) * bufferCount
     const endIndex = Math.min(estimatedRenderCount + startIndex, dataLength)
 

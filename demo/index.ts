@@ -6,7 +6,7 @@ const data: Array<{ index: number; height: number}> = []
 for (let i = 0; i < 100000; i++) {
   data.push({
     index: i,
-    height: 30,
+    height: 30 + (i % 10) * 10,
   })
 }
 
@@ -68,15 +68,15 @@ const setItem = (startIndex: number, endIndex: number) => {
 
   if ($itemContainer && $comparisonItemContainer) {
     if (startIndex !== previousStartIndex || endIndex !== previousEndIndex) {
-      $itemContainer.innerHTML = visibleData.map((d, i) => {
+      $itemContainer.innerHTML = visibleData.map((d) => {
         return `
           <div
             class="virtual-list-item"
-            style="min-height:${30 + (i % 10) * 10}px;"
+            style="min-height:${d.height}px;"
           >${d.index}</div>
         `
       }).join('')
-      $comparisonItemContainer.innerHTML = visibleData.map((d, i) => {
+      $comparisonItemContainer.innerHTML = visibleData.map((d) => {
         return `
           <div
             class="virtual-list-item"
@@ -107,7 +107,12 @@ const positionArray = [
 $scrollToButton?.addEventListener('click', () => {
   const dataIndex = 30041
   const nextPosition = positionArray[i % positionArray.length]
-  const { startIndex, endIndex, sizeFromViewportStartToIndex } = virtualListInstance.getScrollToRange(dataIndex, nextPosition)
+  const [dataIndexItemSize] = setItem(dataIndex, dataIndex + 1)
+  const { startIndex, endIndex, sizeFromViewportStartToIndex } = virtualListInstance.getScrollToRange({
+    index: dataIndex,
+    position: nextPosition,
+    itemSize: dataIndexItemSize,
+  })
   // Set items DOM to get real size
   const visibleItemRealSizeList = setItem(startIndex, endIndex)
   const adjustedScrolledSize = virtualListInstance.getScrollToScrolledSize({
