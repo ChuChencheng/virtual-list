@@ -105,23 +105,26 @@ const positionArray = [
 ]
 
 $scrollToButton?.addEventListener('click', () => {
-  const dataIndex = 30041
+  const dataIndex = 30042
   const nextPosition = positionArray[i % positionArray.length]
   const [dataIndexItemSize] = setItem(dataIndex, dataIndex + 1)
-  const { startIndex, endIndex, sizeFromViewportStartToIndex } = virtualListInstance.getScrollToRange({
-    index: dataIndex,
+  const sizeFromViewportStart = virtualListInstance.getSizeFromViewportStart({
     position: nextPosition,
     itemSize: dataIndexItemSize,
   })
-  // Set items DOM to get real size
-  const visibleItemRealSizeList = setItem(startIndex, endIndex)
-  const adjustedScrolledSize = virtualListInstance.getScrollToScrolledSize({
+  const { estimatedStartIndex, estimatedEndIndex } = virtualListInstance.getEstimatedRange({
     dataIndex,
-    startIndex,
-    endIndex,
+    sizeFromViewportStart,
+  })
+  // Set items DOM to get real size
+  const visibleItemRealSizeList = setItem(estimatedStartIndex, estimatedEndIndex)
+  const adjustedScrolledSize = virtualListInstance.getScrolledSizeByEstimatedRange({
+    dataIndex,
+    sizeFromViewportStart,
+    estimatedStartIndex,
+    estimatedEndIndex,
     visibleItemRealSizeList,
-    sizeFromViewportStartToIndex,
-  }) 
+  })
   if ($viewport) {
     $viewport.scrollTop = adjustedScrolledSize
     // $viewport.scrollTop = scrollTop

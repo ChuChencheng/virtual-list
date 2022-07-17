@@ -21,12 +21,6 @@ interface IGetRatioParameters {
   visibleItemRealSizeList: number[]
 }
 
-interface IGetScrollToRangeReturnValue {
-  startIndex: number
-  endIndex: number
-  sizeFromViewportStartToIndex: number
-}
-
 export interface IVirtualListOptions {
   viewportSize: number
   dataLength: number
@@ -38,14 +32,22 @@ export interface IVirtualListGetOffsetParameters extends IGetRatioParameters {
   scrolledSize: number
 }
 
-export interface IVirtualListGetScrollToRangeParameters {
-  index: number
+export interface IVirtualListGetSizeFromViewportStartParameters {
   position: GET_SCROLLED_SIZE_POSITION_ENUM | number
   itemSize: number
 }
 
-export interface IVirtualListGetScrollToScrolledSizeParameters extends IGetRatioParameters, IGetScrollToRangeReturnValue {
+export interface IVirtualListGetEstimatedRangeParameters {
   dataIndex: number
+  sizeFromViewportStart: number
+}
+
+export interface IVirtualListGetScrolledSizeByEstimatedRangeParameters {
+  dataIndex: number
+  sizeFromViewportStart: number
+  estimatedStartIndex: number
+  estimatedEndIndex: number
+  visibleItemRealSizeList: number[]
 }
 
 class VirtualList {
@@ -53,7 +55,9 @@ class VirtualList {
   
   private bufferCount!: number
 
-  constructor (private readonly options: IVirtualListOptions) {
+  private readonly options!: Omit<IVirtualListOptions, 'bufferCount'>
+
+  constructor (options: IVirtualListOptions) {
     this.bufferCount = options.bufferCount ?? DEFAULT_BUFFER_COUNT
 
     if (options.viewportSize < 0) this.throwError('viewportSize')
@@ -63,6 +67,12 @@ class VirtualList {
 
     const viewportCount = Math.ceil(options.viewportSize / options.itemMinSize)
     this.estimatedRenderCount = viewportCount + this.bufferCount
+
+    this.options = {
+      viewportSize: options.viewportSize,
+      dataLength: options.dataLength,
+      itemMinSize: options.itemMinSize,
+    }
   }
 
   private throwError (field: string) {
@@ -130,13 +140,11 @@ class VirtualList {
     }
   }
 
-  getScrollToRange ({
-    index,
+  getSizeFromViewportStart ({
     position,
     itemSize,
-  }: IVirtualListGetScrollToRangeParameters): IGetScrollToRangeReturnValue {
-    const { bufferCount, estimatedRenderCount } = this
-    const { itemMinSize, viewportSize, dataLength } = this.options
+  }: IVirtualListGetSizeFromViewportStartParameters): number {
+    const { viewportSize } = this.options
 
     let percentage = 0
     if (typeof position === 'number') {
@@ -147,34 +155,55 @@ class VirtualList {
       percentage = 1
     }
 
-    const sizeFromViewportStartToIndex = (viewportSize - itemSize) * percentage
-    const viewportStartIndex = getNumberInRange(index - Math.ceil(sizeFromViewportStartToIndex / itemMinSize), 0, dataLength - 1)
-    const startIndex = Math.floor(viewportStartIndex / bufferCount) * bufferCount
-    const endIndex = Math.min(estimatedRenderCount + startIndex, dataLength)
+    const sizeFromViewportStart = (viewportSize - itemSize) * percentage
+
+    return sizeFromViewportStart
+  }
+
+  getEstimatedRange ({
+    dataIndex,
+    sizeFromViewportStart,
+  }: IVirtualListGetEstimatedRangeParameters): { estimatedStartIndex: number; estimatedEndIndex: number } {
+    const { estimatedRenderCount, bufferCount } = this
+    const { itemMinSize, dataLength } = this.options
+
+    const estimatedViewportStartIndex = getNumberInRange(dataIndex - Math.ceil(sizeFromViewportStart / itemMinSize), 0, dataLength - 1)
+    const estimatedStartIndex = Math.floor(estimatedViewportStartIndex / bufferCount) * bufferCount
+    const estimatedEndIndex = Math.min(estimatedRenderCount + dataIndex, dataLength)
 
     return {
-      startIndex,
-      endIndex,
-      sizeFromViewportStartToIndex,
+      estimatedStartIndex,
+      estimatedEndIndex,
     }
   }
 
-  getScrollToScrolledSize ({
+  getScrolledSizeByEstimatedRange ({
     dataIndex,
-    startIndex,
-    endIndex,
+    sizeFromViewportStart,
+    estimatedStartIndex,
+    estimatedEndIndex,
     visibleItemRealSizeList,
-    sizeFromViewportStartToIndex,
-  }: IVirtualListGetScrollToScrolledSizeParameters): number {
-    const { itemMinSize } = this.options
+  }: IVirtualListGetScrolledSizeByEstimatedRangeParameters): number {
+    const { estimatedRenderCount, bufferCount } = this
+    const { itemMinSize, dataLength } = this.options
+
+    let viewportStartIndex = dataIndex
+    let size = 0
+    while (size < sizeFromViewportStart || viewportStartIndex < estimatedStartIndex) {
+      size += visibleItemRealSizeList[(--viewportStartIndex) - estimatedStartIndex]
+    }
+
+    const startIndex = Math.floor(viewportStartIndex / bufferCount) * bufferCount
+    const endIndex = Math.min(estimatedRenderCount + startIndex, dataLength)
+    const visibleItemRealSizeListByRange = visibleItemRealSizeList.slice(startIndex - estimatedStartIndex, endIndex - estimatedStartIndex)
 
     const ratio = this.getRatio({
       startIndex,
       endIndex,
-      visibleItemRealSizeList,
+      visibleItemRealSizeList: visibleItemRealSizeListByRange,
     })
 
-    const realScrolledSize = getSum(visibleItemRealSizeList, 0, dataIndex - startIndex) - sizeFromViewportStartToIndex
+    const realScrolledSize = getSum(visibleItemRealSizeListByRange, 0, dataIndex - startIndex) - sizeFromViewportStart
     return realScrolledSize / ratio + startIndex * itemMinSize
   }
 }
