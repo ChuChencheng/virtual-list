@@ -16,7 +16,13 @@ if ($app) {
   $app.innerHTML = `
     <div class="list-container">
       <div class="top-bar">
+        <div>
+          <span>Scroll to index: </span>
+          <input class="scroll-to-input" type="number" value=30042 />
+        </div>
         <button class="scroll-to-button">Scroll to</button>
+        <span>Current scrollTo position: </span>
+        <span class="scroll-to-position"></span>
       </div>
       <div class="virtual-list-viewport">
         <div class="virtual-list-whole">
@@ -26,7 +32,7 @@ if ($app) {
     </div>
     <div class="list-container">
       <div class="top-bar">
-        Comparison
+        Corresponding fixed size list
       </div>
       <div class="virtual-list-viewport-comparison">
         <div class="virtual-list-whole-comparison">
@@ -43,7 +49,9 @@ const $itemContainer: HTMLDivElement | null = document.querySelector('.virtual-l
 const $comparisonItemContainer: HTMLDivElement | null = document.querySelector('.virtual-list-item-container-comparison')
 const $whole: HTMLDivElement | null = document.querySelector('.virtual-list-whole')
 const $comparisonWhole: HTMLDivElement | null = document.querySelector('.virtual-list-whole-comparison')
+const $scrollToInput: HTMLInputElement | null = document.querySelector('.scroll-to-input')
 const $scrollToButton: HTMLButtonElement | null = document.querySelector('.scroll-to-button')
+const $scrollToPosition: HTMLSpanElement | null = document.querySelector('.scroll-to-position')
 
 const clientHeight = $viewport?.clientHeight || 0
 const dataLength = data.length
@@ -105,7 +113,7 @@ const positionArray = [
 ]
 
 $scrollToButton?.addEventListener('click', () => {
-  const dataIndex = 30042
+  const dataIndex: number = $scrollToInput?.value ? Number($scrollToInput?.value) : 30042
   const nextPosition = positionArray[i % positionArray.length]
   const [dataIndexItemSize] = setItem(dataIndex, dataIndex + 1)
   const sizeFromViewportStart = virtualListInstance.getSizeFromViewportStart({
@@ -127,8 +135,8 @@ $scrollToButton?.addEventListener('click', () => {
   })
   if ($viewport) {
     $viewport.scrollTop = adjustedScrolledSize
-    // $viewport.scrollTop = scrollTop
   }
+  if ($scrollToPosition) $scrollToPosition.innerText = nextPosition
   i++
 })
 
