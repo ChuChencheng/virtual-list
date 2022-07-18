@@ -14,6 +14,7 @@ export default defineConfig(({ mode }) => {
 
   if (mode === 'docs') {
     buildOptions = {
+      base: '/virtual-list/',
       build: {
         target: 'es2015',
         outDir: path.resolve(__dirname, 'docs'),
