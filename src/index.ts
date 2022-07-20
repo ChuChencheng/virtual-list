@@ -9,7 +9,7 @@ const getNumberInRange = (num: number, min: number, max: number) => {
   return Math.max(min, Math.min(max, num))
 }
 
-export enum GET_SCROLLED_SIZE_POSITION_ENUM {
+export enum VIRTUAL_LIST_SCROLLED_SIZE_POSITION_ENUM {
   TOP = 'TOP',
   MIDDLE = 'MIDDLE',
   BOTTOM = 'BOTTOM',
@@ -33,7 +33,7 @@ export interface IVirtualListGetOffsetParameters extends IGetRatioParameters {
 }
 
 export interface IVirtualListGetSizeFromViewportStartParameters {
-  position: GET_SCROLLED_SIZE_POSITION_ENUM | number
+  position: VIRTUAL_LIST_SCROLLED_SIZE_POSITION_ENUM | number
   itemSize: number
 }
 
@@ -123,7 +123,7 @@ class VirtualList {
     startIndex,
     endIndex,
     visibleItemRealSizeList,
-  }: IVirtualListGetOffsetParameters): { ratio: number; offset: number } {
+  }: IVirtualListGetOffsetParameters): number {
     const { itemMinSize } = this.options
 
     const ratio = this.getRatio({
@@ -134,11 +134,10 @@ class VirtualList {
     
     const offset = scrolledSize - (scrolledSize - startIndex * itemMinSize) * ratio
 
-    return {
-      ratio,
-      offset,
-    }
+    return offset
   }
+
+  // #region Scroll To functions
 
   getSizeFromViewportStart ({
     position,
@@ -149,9 +148,9 @@ class VirtualList {
     let percentage = 0
     if (typeof position === 'number') {
       percentage = getNumberInRange(position, 0, 1)
-    } else if (position === GET_SCROLLED_SIZE_POSITION_ENUM.MIDDLE) {
+    } else if (position === VIRTUAL_LIST_SCROLLED_SIZE_POSITION_ENUM.MIDDLE) {
       percentage = 0.5
-    } else if (position === GET_SCROLLED_SIZE_POSITION_ENUM.BOTTOM) {
+    } else if (position === VIRTUAL_LIST_SCROLLED_SIZE_POSITION_ENUM.BOTTOM) {
       percentage = 1
     }
 
@@ -206,6 +205,8 @@ class VirtualList {
     const realScrolledSize = getSum(visibleItemRealSizeListByRange, 0, dataIndex - startIndex) - sizeFromViewportStart
     return realScrolledSize / ratio + startIndex * itemMinSize
   }
+
+  // #endregion
 }
 
 export default VirtualList

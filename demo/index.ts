@@ -1,4 +1,4 @@
-import VirtualList, { GET_SCROLLED_SIZE_POSITION_ENUM } from '../src'
+import VirtualList, { VIRTUAL_LIST_SCROLLED_SIZE_POSITION_ENUM } from '../src'
 import './style.css'
 
 const data: Array<{ index: number; height: number}> = []
@@ -107,9 +107,9 @@ const setItem = (startIndex: number, endIndex: number) => {
 
 let i = 0
 const positionArray = [
-  GET_SCROLLED_SIZE_POSITION_ENUM.TOP,
-  GET_SCROLLED_SIZE_POSITION_ENUM.MIDDLE,
-  GET_SCROLLED_SIZE_POSITION_ENUM.BOTTOM,
+  VIRTUAL_LIST_SCROLLED_SIZE_POSITION_ENUM.TOP,
+  VIRTUAL_LIST_SCROLLED_SIZE_POSITION_ENUM.MIDDLE,
+  VIRTUAL_LIST_SCROLLED_SIZE_POSITION_ENUM.BOTTOM,
 ]
 
 $scrollToButton?.addEventListener('click', () => {
@@ -144,13 +144,13 @@ const handleScroll = (scrollTop: number) => {
   const { startIndex, endIndex } = virtualListInstance.getRange(scrollTop)
 
   const visibleItemRealSizeList = setItem(startIndex, endIndex)
-  const { offset } = virtualListInstance.getOffset({
+  const offset = virtualListInstance.getOffset({
     scrolledSize: scrollTop,
     startIndex,
     endIndex,
     visibleItemRealSizeList,
   })
-  const { offset: comparisonOffset } = virtualListInstance.getOffset({
+  const comparisonOffset = virtualListInstance.getOffset({
     scrolledSize: scrollTop,
     startIndex,
     endIndex,
