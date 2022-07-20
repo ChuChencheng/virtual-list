@@ -14,4 +14,3 @@ Virtual list with no scrollbar jittery.
 # Todos
 
 - [ ] Documentation
-- [ ] Unit test
