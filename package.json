@@ -8,7 +8,7 @@
   "sideEffects": false,
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "rimraf dist && vite build",
     "build:docs": "rimraf docs && vite build --mode docs",
     "preview": "vite preview",
     "test": "jest --coverage"

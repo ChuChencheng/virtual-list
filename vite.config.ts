@@ -23,7 +23,7 @@ export default defineConfig(({ mode }) => {
   }
 
   return {
-    root: path.resolve(process.cwd(), 'demo'),
+    root: mode === 'production' ? process.cwd() : path.resolve(process.cwd(), 'demo'),
     ...buildOptions,
   }
 })
