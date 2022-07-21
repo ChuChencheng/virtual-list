@@ -9,6 +9,9 @@ const getNumberInRange = (num: number, min: number, max: number) => {
   return Math.max(min, Math.min(max, num))
 }
 
+/**
+ * @public
+ */
 export enum VIRTUAL_LIST_SCROLLED_SIZE_POSITION_ENUM {
   TOP = 'TOP',
   MIDDLE = 'MIDDLE',
@@ -21,6 +24,9 @@ interface IGetRatioParameters {
   visibleItemRealSizeList: number[]
 }
 
+/**
+ * @public
+ */
 export interface IVirtualListOptions {
   viewportSize: number
   dataLength: number
@@ -28,20 +34,35 @@ export interface IVirtualListOptions {
   bufferCount?: number
 }
 
-export interface IVirtualListGetOffsetParameters extends IGetRatioParameters {
+/**
+ * @public
+ */
+export interface IVirtualListGetOffsetParameters {
+  startIndex: number
+  endIndex: number
+  visibleItemRealSizeList: number[]
   scrolledSize: number
 }
 
+/**
+ * @public
+ */
 export interface IVirtualListGetSizeFromViewportStartParameters {
   position: VIRTUAL_LIST_SCROLLED_SIZE_POSITION_ENUM | number
   itemSize: number
 }
 
+/**
+ * @public
+ */
 export interface IVirtualListGetEstimatedRangeParameters {
   dataIndex: number
   sizeFromViewportStart: number
 }
 
+/**
+ * @public
+ */
 export interface IVirtualListGetScrolledSizeByEstimatedRangeParameters {
   dataIndex: number
   sizeFromViewportStart: number
@@ -50,6 +71,9 @@ export interface IVirtualListGetScrolledSizeByEstimatedRangeParameters {
   visibleItemRealSizeList: number[]
 }
 
+/**
+ * @public
+ */
 class VirtualList {
   private estimatedRenderCount!: number
 

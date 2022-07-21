@@ -4,11 +4,11 @@
   "description": "Virtual list core",
   "main": "dist/virtual-list.umd.js",
   "module": "dist/virtual-list.es.js",
-  "types": "dist/types",
+  "types": "dist/index.d.ts",
   "sideEffects": false,
   "scripts": {
     "dev": "vite",
-    "build": "rimraf dist && vite build",
+    "build": "rimraf dist && vite build && tsc src/index.ts --declaration --emitDeclarationOnly --declarationDir dist && api-extractor run --local --verbose",
     "build:docs": "rimraf docs && vite build --mode docs",
     "preview": "vite preview",
     "test": "jest --coverage"
@@ -41,6 +41,7 @@
   "devDependencies": {
     "@commitlint/cli": "^11.0.0",
     "@commitlint/config-conventional": "^11.0.0",
+    "@microsoft/api-extractor": "^7.28.5",
     "@types/jest": "^28.1.6",
     "@typescript-eslint/eslint-plugin": "^4.14.0",
     "@typescript-eslint/parser": "^4.14.0",
