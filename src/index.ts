@@ -52,6 +52,8 @@ export interface IVirtualListGetScrolledSizeByEstimatedRangeParameters {
 
 class VirtualList {
   private estimatedRenderCount!: number
+
+  private maxScrollableSize!: number
   
   private bufferCount!: number
 
@@ -67,6 +69,7 @@ class VirtualList {
 
     const viewportCount = Math.ceil(options.viewportSize / options.itemMinSize)
     this.estimatedRenderCount = viewportCount + this.bufferCount
+    this.maxScrollableSize = options.dataLength * options.itemMinSize - options.viewportSize
 
     this.options = {
       viewportSize: options.viewportSize,
@@ -94,7 +97,8 @@ class VirtualList {
 
     if (isLastScroll) {
       scrollableSize = renderCount * itemMinSize - viewportSize
-      realScrollableSize = (getSum(visibleItemRealSizeList, 0, visibleItemRealSizeList.length) || scrollableSize) - viewportSize
+      realScrollableSize = getSum(visibleItemRealSizeList, 0, visibleItemRealSizeList.length) - viewportSize
+      if (realScrollableSize <= 0) realScrollableSize = scrollableSize
     } else {
       scrollableSize = bufferCount * itemMinSize
       realScrollableSize = getSum(visibleItemRealSizeList, 0, bufferCount) || scrollableSize
@@ -183,12 +187,12 @@ class VirtualList {
     estimatedEndIndex,
     visibleItemRealSizeList,
   }: IVirtualListGetScrolledSizeByEstimatedRangeParameters): number {
-    const { estimatedRenderCount, bufferCount } = this
+    const { estimatedRenderCount, bufferCount, maxScrollableSize } = this
     const { itemMinSize, dataLength } = this.options
 
     let viewportStartIndex = dataIndex
     let size = 0
-    while (size < sizeFromViewportStart || viewportStartIndex < estimatedStartIndex) {
+    while (size < sizeFromViewportStart && viewportStartIndex > estimatedStartIndex) {
       size += visibleItemRealSizeList[(--viewportStartIndex) - estimatedStartIndex]
     }
 
@@ -203,7 +207,7 @@ class VirtualList {
     })
 
     const realScrolledSize = getSum(visibleItemRealSizeListByRange, 0, dataIndex - startIndex) - sizeFromViewportStart
-    return realScrolledSize / ratio + startIndex * itemMinSize
+    return getNumberInRange(realScrolledSize / ratio + startIndex * itemMinSize, 0, maxScrollableSize)
   }
 
   // #endregion

@@ -122,3 +122,258 @@ describe('Variable size', () => {
     expect(scrolledSize).toBe(901158)
   })
 })
+
+describe('Scroll to', () => {
+  const options: IVirtualListOptions = {
+    viewportSize: 400,
+    itemMinSize: 30,
+    dataLength: 100000,
+    bufferCount: 20,
+  }
+  const instance = new VirtualList(options)
+
+  const frontItemIndex = 3
+  const backItemIndex = 99998
+
+  it('Scroll to front item - top', () => {
+    const dataIndex = frontItemIndex
+    const visibleItemRealSizeList = []
+
+    const sizeFromViewportStart = instance.getSizeFromViewportStart({
+      position: VIRTUAL_LIST_SCROLLED_SIZE_POSITION_ENUM.TOP,
+      itemSize: 30 + (dataIndex % 10) * 10,
+    })
+    const { estimatedStartIndex, estimatedEndIndex } = instance.getEstimatedRange({
+      dataIndex,
+      sizeFromViewportStart,
+    })
+
+    for (let i = 0; i < estimatedEndIndex - estimatedStartIndex; i++) {
+      visibleItemRealSizeList[i] = 30 + ((i + estimatedStartIndex) % 10) * 10
+    }
+
+    const scrolledSize = instance.getScrolledSizeByEstimatedRange({
+      dataIndex,
+      sizeFromViewportStart,
+      estimatedStartIndex,
+      estimatedEndIndex,
+      visibleItemRealSizeList,
+    })
+
+    expect(sizeFromViewportStart).toBe(0)
+    expect(estimatedStartIndex).toBe(0)
+    expect(estimatedEndIndex).toBe(37)
+    expect(scrolledSize).toBe(48)
+  })
+
+  it('Scroll to front item - middle', () => {
+    const dataIndex = frontItemIndex
+    const visibleItemRealSizeList = []
+
+    const sizeFromViewportStart = instance.getSizeFromViewportStart({
+      position: VIRTUAL_LIST_SCROLLED_SIZE_POSITION_ENUM.MIDDLE,
+      itemSize: 30 + (dataIndex % 10) * 10,
+    })
+    const { estimatedStartIndex, estimatedEndIndex } = instance.getEstimatedRange({
+      dataIndex,
+      sizeFromViewportStart,
+    })
+
+    for (let i = 0; i < estimatedEndIndex - estimatedStartIndex; i++) {
+      visibleItemRealSizeList[i] = 30 + ((i + estimatedStartIndex) % 10) * 10
+    }
+
+    const scrolledSize = instance.getScrolledSizeByEstimatedRange({
+      dataIndex,
+      sizeFromViewportStart,
+      estimatedStartIndex,
+      estimatedEndIndex,
+      visibleItemRealSizeList,
+    })
+
+    expect(sizeFromViewportStart).toBe(170)
+    expect(estimatedStartIndex).toBe(0)
+    expect(estimatedEndIndex).toBe(37)
+    expect(scrolledSize).toBe(0)
+  })
+
+  it('Scroll to front item - bottom', () => {
+    const dataIndex = frontItemIndex
+    const visibleItemRealSizeList = []
+
+    const sizeFromViewportStart = instance.getSizeFromViewportStart({
+      position: VIRTUAL_LIST_SCROLLED_SIZE_POSITION_ENUM.BOTTOM,
+      itemSize: 30 + (dataIndex % 10) * 10,
+    })
+    const { estimatedStartIndex, estimatedEndIndex } = instance.getEstimatedRange({
+      dataIndex,
+      sizeFromViewportStart,
+    })
+
+    for (let i = 0; i < estimatedEndIndex - estimatedStartIndex; i++) {
+      visibleItemRealSizeList[i] = 30 + ((i + estimatedStartIndex) % 10) * 10
+    }
+
+    const scrolledSize = instance.getScrolledSizeByEstimatedRange({
+      dataIndex,
+      sizeFromViewportStart,
+      estimatedStartIndex,
+      estimatedEndIndex,
+      visibleItemRealSizeList,
+    })
+
+    expect(sizeFromViewportStart).toBe(340)
+    expect(estimatedStartIndex).toBe(0)
+    expect(estimatedEndIndex).toBe(37)
+    expect(scrolledSize).toBe(0)
+  })
+
+  it('Scroll to back item - top', () => {
+    const dataIndex = backItemIndex
+    const visibleItemRealSizeList = []
+
+    const sizeFromViewportStart = instance.getSizeFromViewportStart({
+      position: VIRTUAL_LIST_SCROLLED_SIZE_POSITION_ENUM.TOP,
+      itemSize: 30 + (dataIndex % 10) * 10,
+    })
+    const { estimatedStartIndex, estimatedEndIndex } = instance.getEstimatedRange({
+      dataIndex,
+      sizeFromViewportStart,
+    })
+
+    for (let i = 0; i < estimatedEndIndex - estimatedStartIndex; i++) {
+      visibleItemRealSizeList[i] = 30 + ((i + estimatedStartIndex) % 10) * 10
+    }
+
+    const scrolledSize = instance.getScrolledSizeByEstimatedRange({
+      dataIndex,
+      sizeFromViewportStart,
+      estimatedStartIndex,
+      estimatedEndIndex,
+      visibleItemRealSizeList,
+    })
+
+    expect(sizeFromViewportStart).toBe(0)
+    expect(estimatedStartIndex).toBe(99980)
+    expect(estimatedEndIndex).toBe(100000)
+    expect(scrolledSize).toBe(options.dataLength * options.itemMinSize - options.viewportSize)
+  })
+
+  it('Scroll to back item - middle', () => {
+    const dataIndex = backItemIndex
+    const visibleItemRealSizeList = []
+
+    const sizeFromViewportStart = instance.getSizeFromViewportStart({
+      position: VIRTUAL_LIST_SCROLLED_SIZE_POSITION_ENUM.MIDDLE,
+      itemSize: 30 + (dataIndex % 10) * 10,
+    })
+    const { estimatedStartIndex, estimatedEndIndex } = instance.getEstimatedRange({
+      dataIndex,
+      sizeFromViewportStart,
+    })
+
+    for (let i = 0; i < estimatedEndIndex - estimatedStartIndex; i++) {
+      visibleItemRealSizeList[i] = 30 + ((i + estimatedStartIndex) % 10) * 10
+    }
+
+    const scrolledSize = instance.getScrolledSizeByEstimatedRange({
+      dataIndex,
+      sizeFromViewportStart,
+      estimatedStartIndex,
+      estimatedEndIndex,
+      visibleItemRealSizeList,
+    })
+
+    expect(sizeFromViewportStart).toBe(145)
+    expect(estimatedStartIndex).toBe(99980)
+    expect(estimatedEndIndex).toBe(100000)
+    expect(scrolledSize).toBe(options.dataLength * options.itemMinSize - options.viewportSize)
+  })
+
+  it('Scroll to back item - bottom', () => {
+    const dataIndex = backItemIndex
+    const visibleItemRealSizeList = []
+
+    const sizeFromViewportStart = instance.getSizeFromViewportStart({
+      position: VIRTUAL_LIST_SCROLLED_SIZE_POSITION_ENUM.BOTTOM,
+      itemSize: 30 + (dataIndex % 10) * 10,
+    })
+    const { estimatedStartIndex, estimatedEndIndex } = instance.getEstimatedRange({
+      dataIndex,
+      sizeFromViewportStart,
+    })
+
+    for (let i = 0; i < estimatedEndIndex - estimatedStartIndex; i++) {
+      visibleItemRealSizeList[i] = 30 + ((i + estimatedStartIndex) % 10) * 10
+    }
+
+    const scrolledSize = instance.getScrolledSizeByEstimatedRange({
+      dataIndex,
+      sizeFromViewportStart,
+      estimatedStartIndex,
+      estimatedEndIndex,
+      visibleItemRealSizeList,
+    })
+
+    expect(sizeFromViewportStart).toBe(290)
+    expect(estimatedStartIndex).toBe(99980)
+    expect(estimatedEndIndex).toBe(100000)
+    expect(Math.trunc(scrolledSize)).toBe(2999578)
+  })
+
+  it('Scroll to custom position', () => {
+    const dataIndex = 30042
+    const visibleItemRealSizeList = []
+
+    const sizeFromViewportStart = instance.getSizeFromViewportStart({
+      position: 0.8,
+      itemSize: 30 + (dataIndex % 10) * 10,
+    })
+    const { estimatedStartIndex, estimatedEndIndex } = instance.getEstimatedRange({
+      dataIndex,
+      sizeFromViewportStart,
+    })
+
+    for (let i = 0; i < estimatedEndIndex - estimatedStartIndex; i++) {
+      visibleItemRealSizeList[i] = 30 + ((i + estimatedStartIndex) % 10) * 10
+    }
+
+    const scrolledSize = instance.getScrolledSizeByEstimatedRange({
+      dataIndex,
+      sizeFromViewportStart,
+      estimatedStartIndex,
+      estimatedEndIndex,
+      visibleItemRealSizeList,
+    })
+
+    expect(sizeFromViewportStart).toBe(280)
+    expect(estimatedStartIndex).toBe(30020)
+    expect(estimatedEndIndex).toBe(30076)
+    expect(Math.trunc(scrolledSize)).toBe(901116)
+  })
+})
+
+describe('Exceptions', () => {
+  const options: IVirtualListOptions = {
+    viewportSize: 400,
+    itemMinSize: 30,
+    dataLength: 100000,
+    bufferCount: 20,
+  }
+
+  it('viewportSize', () => {
+    expect(() => new VirtualList({ ...options, viewportSize: -1 })).toThrowError()
+  })
+
+  it('itemMinSize', () => {
+    expect(() => new VirtualList({ ...options, itemMinSize: 0 })).toThrowError()
+  })
+
+  it('dataLength', () => {
+    expect(() => new VirtualList({ ...options, dataLength: -1 })).toThrowError()
+  })
+
+  it('bufferCount', () => {
+    expect(() => new VirtualList({ ...options, bufferCount: 0 })).toThrowError()
+  })
+})
