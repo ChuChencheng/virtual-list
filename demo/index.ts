@@ -1,6 +1,10 @@
 import VirtualList, { VIRTUAL_LIST_SCROLLED_SIZE_POSITION_ENUM } from '../src'
 import './style.css'
 
+await new Promise((resolve) => {
+  window.onload = resolve
+})
+
 const data: Array<{ index: number; height: number}> = []
 
 for (let i = 0; i < 100000; i++) {
